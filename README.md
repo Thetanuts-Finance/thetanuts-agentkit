@@ -37,13 +37,14 @@ npm install @coinbase/agentkit-vercel-ai-sdk ai @ai-sdk/anthropic
 ## Quickstart
 
 ```typescript
-import { AgentKit, CdpWalletProvider } from '@coinbase/agentkit';
+import { AgentKit, CdpEvmWalletProvider } from '@coinbase/agentkit';
 import { getLangChainTools } from '@coinbase/agentkit-langchain';
 import { thetanutsActionProvider } from '@thetanuts-finance/agentkit';
 
-const walletProvider = await CdpWalletProvider.configureWithWallet({
-  apiKeyName: process.env.CDP_API_KEY_NAME!,
-  apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY!,
+const walletProvider = await CdpEvmWalletProvider.configureWithWallet({
+  apiKeyId: process.env.CDP_API_KEY_ID!,
+  apiKeySecret: process.env.CDP_API_KEY_SECRET!,
+  walletSecret: process.env.CDP_WALLET_SECRET!,
   networkId: 'base-mainnet',
 });
 
@@ -98,7 +99,7 @@ All actions take the AgentKit wallet provider as the first argument (injected au
 
 Tested against:
 
-- `CdpWalletProvider` — MPC-managed key, agent never sees private material. **Recommended for production.**
+- `CdpEvmWalletProvider` — MPC-managed key, agent never sees private material. **Recommended for production.**
 - `ViemWalletProvider` — Local key in a viem `Account`. Useful for development.
 - `PrivyWalletProvider` — Embedded wallets, server-side.
 - Any custom `EvmWalletProvider` subclass that implements `sendTransaction`, `signTypedData`, `signMessage`, `getAddress`, `getNetwork`, `waitForTransactionReceipt`.

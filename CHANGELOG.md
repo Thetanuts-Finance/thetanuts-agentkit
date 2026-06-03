@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 — sync with current @coinbase/agentkit API
+
+- Bump `@coinbase/agentkit` peerDependency to `>=0.10.0` (was `>=0.5.0`; the published v0.10.x API renamed `CdpWalletProvider` → `CdpEvmWalletProvider` and changed the configure-with-wallet field names from `apiKeyName` / `apiKeyPrivateKey` to `apiKeyId` / `apiKeySecret` / `walletSecret`).
+- Update README + both quickstarts to use the new class and field names.
+- No runtime API changes in this package itself.
+
 ## 0.1.1 — Phase B audit closeout
 
 Five findings from the AgentKit security audit, four addressed here:

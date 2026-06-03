@@ -10,8 +10,9 @@
  *               @thetanuts-finance/agentkit \
  *               @thetanuts-finance/thetanuts-client
  *
- *   export CDP_API_KEY_NAME=...
- *   export CDP_API_KEY_PRIVATE_KEY=...
+ *   export CDP_API_KEY_ID=...
+ *   export CDP_API_KEY_SECRET=...
+ *   export CDP_WALLET_SECRET=...
  *   export ANTHROPIC_API_KEY=...
  *
  * Run:
@@ -20,14 +21,15 @@
 
 import { generateText } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
-import { AgentKit, CdpWalletProvider } from '@coinbase/agentkit';
+import { AgentKit, CdpEvmWalletProvider } from '@coinbase/agentkit';
 import { getVercelAITools } from '@coinbase/agentkit-vercel-ai-sdk';
 import { thetanutsActionProvider } from '@thetanuts-finance/agentkit';
 
 async function main() {
-  const walletProvider = await CdpWalletProvider.configureWithWallet({
-    apiKeyName: process.env.CDP_API_KEY_NAME!,
-    apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY!,
+  const walletProvider = await CdpEvmWalletProvider.configureWithWallet({
+    apiKeyId: process.env.CDP_API_KEY_ID!,
+    apiKeySecret: process.env.CDP_API_KEY_SECRET!,
+    walletSecret: process.env.CDP_WALLET_SECRET!,
     networkId: 'base-mainnet',
   });
 
