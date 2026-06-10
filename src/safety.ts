@@ -22,7 +22,6 @@
 
 const SAFE_TYPES = {
   approve: 'approve' as const,
-  fillOrder: 'fillOrder' as const,
   requestRfq: 'requestRfq' as const,
   makeOffer: 'makeOffer' as const,
 };
@@ -45,8 +44,8 @@ export interface SafetyContext {
 export interface SafetyLimits {
   /**
    * Hard ceiling on per-action notional, expressed in **USDC base units**
-   * (6 decimals). 100_000_000n = $100. Applies to fill_order's
-   * usdcAmount and to RFQ premiums.
+   * (6 decimals). 100_000_000n = $100. Applies to RFQ premiums and to
+   * SELL-side collateral approvals.
    *
    * Required unless `unsafe: true` is set.
    */
@@ -111,7 +110,7 @@ export class SafetyPolicy {
     if (this.limits.unsafe) return;
 
     // Notional cap. We treat the amount as USDC base units when it concerns
-    // a USDC-denominated spend (fill_order.usdcAmount, RFQ premium in 6-dec
+    // a USDC-denominated spend (RFQ premium in 6-dec
     // collateral). For non-USDC collateral the cap is still applied
     // structurally (callers are expected to convert), so over-conservative
     // by design.

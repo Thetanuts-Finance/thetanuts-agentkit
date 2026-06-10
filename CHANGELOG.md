@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.0 — drop OptionBook from agent surface
+
+**Breaking** — removes the `fill_order` action.
+
+OptionBook fills are not exposed in v0.2 because the silent-rejection failure mode (maker offline, indexer lag, race-loss) creates a poor first-trade UX for autonomous agents. RFQ is the only write path. If you need OptionBook fills, use the SDK's `optionBook.encodeFillOrder` directly — that surface is unchanged.
+
+- Removed: `fill_order` `@CreateAction` method
+- Removed: `FillOrderSchema` + `FillOrderArgs` public exports
+- Removed: `fillOrder` from `SafetyActionType` enum
+- Updated: `approve` description no longer mentions OptionBook
+- Updated: README action table + safety section
+- Added: `SafetyPolicy` unit test suite (`tests/safety.test.mjs`, runs via `node --test` against the compiled `dist/` so it exercises the published artifact) — covers the fail-closed default, notional cap, collateral allowlist, `onWriteAction` hook ordering, and `approvalAmount` policy
+
+Action surface now: 8 write actions (`approve`, `request_rfq`, `make_offer`, `make_offer_with_signature`, `settle_rfq`, `settle_rfq_early`, `cancel_rfq`, `cancel_offer`) + 3 read actions (`get_user_positions`, `get_rfq`, `get_market_prices`).
+
+## 0.1.4 — 30-second default RFQ offer window
+
+- `request_rfq`: `offerEndTimestamp` is now optional. Defaults to `now + 30 seconds` when omitted. Rationale: a short default lets agents discover MM interest quickly instead of waiting through a long window for silence. The contract enforces no minimum (REVEAL_WINDOW only constrains expiry vs offer-end; the live r12 REVEAL_WINDOW is 60s), so the default is contract-safe for any sensible option expiry.
+- Callers can override (e.g. `offerEndTimestamp: now + 300` for a 5-minute window).
+
 ## 0.1.2 — sync with current @coinbase/agentkit API
 
 - Bump `@coinbase/agentkit` peerDependency to `>=0.10.0` (was `>=0.5.0`; the published v0.10.x API renamed `CdpWalletProvider` → `CdpEvmWalletProvider` and changed the configure-with-wallet field names from `apiKeyName` / `apiKeyPrivateKey` to `apiKeyId` / `apiKeySecret` / `walletSecret`).

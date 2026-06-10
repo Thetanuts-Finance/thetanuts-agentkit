@@ -1,6 +1,6 @@
 # @thetanuts-finance/agentkit
 
-Coinbase AgentKit ActionProvider for trading Thetanuts options on Base. Lets autonomous backend agents — agents that own their own wallet — fill orderbook orders, request quotations, make encrypted sealed-bid offers, and settle, through any AgentKit-supported framework (LangChain, Vercel AI SDK, OpenAI Agents SDK, Eliza, MCP, Pydantic AI, AutoGen).
+Coinbase AgentKit ActionProvider for trading Thetanuts options on Base. Lets autonomous backend agents — agents that own their own wallet — request quotations (RFQ), make encrypted sealed-bid offers, and settle, through any AgentKit-supported framework (LangChain, Vercel AI SDK, OpenAI Agents SDK, Eliza, MCP, Pydantic AI, AutoGen).
 
 This is **Phase B** of the Thetanuts agent integration. Phase A (the Base MCP plugin + prepare service, for user-in-the-loop agents) lives in the main SDK repo at `Thetanuts-Finance/thetanuts-sdk/mcp-server/plugins/base-mcp`.
 
@@ -78,8 +78,7 @@ All actions take the AgentKit wallet provider as the first argument (injected au
 
 | Action | Purpose |
 |---|---|
-| `approve` | Approve an ERC20 spender (OptionBook or OptionFactory). Bundled automatically by `fill_order` when needed; use directly only when explicit. |
-| `fill_order` | Fill a resting limit order on the OptionBook. Auto-approves collateral if allowance is insufficient. |
+| `approve` | Approve an ERC20 spender (the OptionFactory). Bundled automatically by `request_rfq` for SELL positions; use directly only when explicit. |
 | `request_rfq` | Create an RFQ for any product (PUT, CALL, spreads, butterflies, condors, iron condor). Encrypts offers automatically using the agent's stored ECDH keypair. |
 | `make_offer` | Submit a sealed-bid offer on someone else's RFQ. Signs EIP-712 `Offer` typed-data via the wallet, encrypts the offer body, broadcasts in one tool call. |
 | `settle_rfq` | Normal settlement after the offer window closes. |
@@ -120,7 +119,7 @@ For `make_offer`, the EIP-712 envelope is built via `optionFactory.buildOfferTyp
 
 ## Safety limits
 
-Every write action runs through an in-band `SafetyPolicy`. The constructor's `safetyLimits` field is **required by default** — if you don't pass one, all four value-moving actions (`approve`, `fill_order`, `request_rfq`, `make_offer`) throw `SAFETY_LIMITS_REQUIRED` and the LLM gets a safe refusal message back instead of an unbounded write.
+Every write action runs through an in-band `SafetyPolicy`. The constructor's `safetyLimits` field is **required by default** — if you don't pass one, all three value-moving actions (`approve`, `request_rfq`, `make_offer`) throw `SAFETY_LIMITS_REQUIRED` and the LLM gets a safe refusal message back instead of an unbounded write.
 
 ```typescript
 interface SafetyLimits {
