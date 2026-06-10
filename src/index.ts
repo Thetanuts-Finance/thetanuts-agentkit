@@ -1,3 +1,8 @@
+// Required by AgentKit's @CreateAction decorator (uses
+// Reflect.getMetadata at runtime). Imported once at the package entry so
+// consumers don't have to remember.
+import 'reflect-metadata';
+
 export {
   ThetanutsActionProvider,
   thetanutsActionProvider,
@@ -5,7 +10,6 @@ export {
 
 export {
   ApproveSchema,
-  FillOrderSchema,
   RequestRfqSchema,
   MakeOfferSchema,
   SettleRfqSchema,
@@ -21,7 +25,6 @@ export {
 
 export type {
   ApproveArgs,
-  FillOrderArgs,
   RequestRfqArgs,
   MakeOfferArgs,
   SettleRfqArgs,

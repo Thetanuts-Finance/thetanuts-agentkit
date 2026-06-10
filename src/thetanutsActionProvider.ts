@@ -7,7 +7,6 @@ import {
 } from '@coinbase/agentkit';
 import {
   ApproveSchema,
-  FillOrderSchema,
   RequestRfqSchema,
   MakeOfferSchema,
   SettleRfqSchema,
@@ -77,7 +76,7 @@ export class ThetanutsActionProvider extends ActionProvider<EvmWalletProvider> {
   @CreateAction({
     name: 'approve',
     description:
-      'Approve an ERC20 spender (typically the OptionBook or OptionFactory) for a given amount of a token. Required before fill_order on tokens without active allowance, and before SELL RFQs that require collateral. The actual amount approved respects the configured maxApprovalAmount policy: "exact" approves the requested amount, a bigint caps it, "unlimited" approves MAX_UINT256.',
+      'Approve an ERC20 spender (the OptionFactory) for a given amount of a token. Required before SELL RFQs that require collateral. The actual amount approved respects the configured maxApprovalAmount policy: "exact" approves the requested amount, a bigint caps it, "unlimited" approves MAX_UINT256.',
     schema: ApproveSchema,
   })
   async approve(wallet: EvmWalletProvider, args: z.infer<typeof ApproveSchema>): Promise<string> {
@@ -104,73 +103,6 @@ export class ThetanutsActionProvider extends ActionProvider<EvmWalletProvider> {
     }) as Promise<string>;
   }
 
-  // ====================================================================
-  // OptionBook — limit orderbook
-  // ====================================================================
-
-  @CreateAction({
-    name: 'fill_order',
-    description:
-      'Fill a resting order on the Thetanuts OptionBook orderbook. Provide the order index (from the State API or read-only MCP `fetch_orders`) and optionally the USDC amount to spend (omit to fill the maximum available, subject to the configured notional cap). Automatically broadcasts an approval first if the wallet lacks sufficient allowance on the order collateral, respecting the maxApprovalAmount policy.',
-    schema: FillOrderSchema,
-  })
-  async fillOrder(wallet: EvmWalletProvider, args: z.infer<typeof FillOrderSchema>): Promise<string> {
-    return this.withSafety(async () => {
-      const client = buildClient(wallet, this.rpcUrl);
-      const orders = await client.api.fetchOrders();
-      const order = orders[args.orderId];
-      if (!order) return `Order index ${args.orderId} not found on the orderbook.`;
-      const collateralToken = order.order.collateralToken;
-      if (!collateralToken) return `Order ${args.orderId} is missing collateralToken; cannot determine approval target.`;
-
-      const usdcAmount = args.usdcAmount ? BigInt(args.usdcAmount) : undefined;
-      const encoded = client.optionBook.encodeFillOrder(order, usdcAmount, args.referrer);
-      const spendAmount = usdcAmount ?? order.order.numContracts * order.order.price;
-
-      // Safety gate on the fill itself. Treats spendAmount as USDC-base-
-      // units; over-conservative for non-USDC collateral by design.
-      this.safety.assertAllowed({
-        action: 'fillOrder',
-        token: collateralToken as `0x${string}`,
-        spender: encoded.to as `0x${string}`,
-        amount: spendAmount,
-        isApproval: false,
-      });
-
-      const walletAddr = await safeGetAddress(wallet);
-      const allowance = await client.erc20.getAllowance(collateralToken, walletAddr, encoded.to);
-      let approveTx: `0x${string}` | undefined;
-      if (allowance < spendAmount) {
-        // The approve sub-action gets its own safety check (separate
-        // action type so hosts can audit differently).
-        this.safety.assertAllowed({
-          action: 'approve',
-          token: collateralToken as `0x${string}`,
-          spender: encoded.to as `0x${string}`,
-          amount: spendAmount,
-          isApproval: true,
-        });
-        const approvalAmount = this.safety.approvalAmount(spendAmount);
-        const approveEnc = client.erc20.encodeApprove(collateralToken, encoded.to, approvalAmount);
-        approveTx = (await wallet.sendTransaction({
-          to: approveEnc.to as `0x${string}`,
-          data: approveEnc.data as `0x${string}`,
-        })) as `0x${string}`;
-        await wallet.waitForTransactionReceipt(approveTx);
-      }
-
-      const fillTx = (await wallet.sendTransaction({
-        to: encoded.to as `0x${string}`,
-        data: encoded.data as `0x${string}`,
-      })) as `0x${string}`;
-      await wallet.waitForTransactionReceipt(fillTx);
-
-      return [
-        approveTx ? `Approved ${collateralToken} for OptionBook. tx=${approveTx}` : 'Allowance already sufficient.',
-        `Filled order ${args.orderId}. tx=${fillTx}`,
-      ].join(' ');
-    }) as Promise<string>;
-  }
 
   // ====================================================================
   // OptionFactory — RFQ lifecycle
@@ -212,9 +144,15 @@ export class ThetanutsActionProvider extends ActionProvider<EvmWalletProvider> {
       );
 
       const keypair = await client.rfqKeys.getOrCreateKeyPair();
+      // 30-second default offer window. Per Phase A.7 the contract enforces
+      // no minimum (REVEAL_WINDOW=60s only constrains expiryTimestamp vs
+      // offerEndTimestamp, not the offer window itself), so a tight default
+      // lets autonomous agents discover MM interest quickly.
+      const nowSec = Math.floor(Date.now() / 1000);
+      const offerEndTimestamp = args.offerEndTimestamp ?? nowSec + 30;
       const offerDeadlineMinutes = Math.max(
-        1,
-        Math.floor((args.offerEndTimestamp - Math.floor(Date.now() / 1000)) / 60),
+        0.1,
+        (offerEndTimestamp - nowSec) / 60,
       );
 
       const optionType = args.product.startsWith('PUT') ? 'PUT' : 'CALL';
