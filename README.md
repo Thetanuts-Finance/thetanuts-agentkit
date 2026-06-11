@@ -18,6 +18,8 @@ Both ultimately call the same SDK encode helpers — the difference is who signs
 
 > **New here?** [SETUP.md](./SETUP.md) is the end-to-end guide: picking a route, CDP wallet prerequisites, safety limits, and copy-paste configs for Claude Desktop, Claude Code, Cursor, and Codex.
 
+> **Walkthrough skill:** [SKILL.md](./SKILL.md) teaches any skill-aware agent to guide you through the kit — detection, setup, funding, a read-only demo, and a safe first trade. Install it alongside the MCP server: `npx skills add Thetanuts-Finance/thetanuts-agentkit -a claude-code` (or `-a cursor|codex`, or upload to https://claude.ai/customize/skills). It also ships inside the npm package at `node_modules/@thetanuts-finance/agentkit/SKILL.md`.
+
 ## Install
 
 ```bash
