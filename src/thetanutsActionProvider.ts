@@ -144,8 +144,8 @@ export class ThetanutsActionProvider extends ActionProvider<EvmWalletProvider> {
       );
 
       const keypair = await client.rfqKeys.getOrCreateKeyPair();
-      // 30-second default offer window. Per Phase A.7 the contract enforces
-      // no minimum (REVEAL_WINDOW=60s only constrains expiryTimestamp vs
+      // 30-second default offer window. The contract enforces no minimum
+      // (REVEAL_WINDOW=60s only constrains expiryTimestamp vs
       // offerEndTimestamp, not the offer window itself), so a tight default
       // lets autonomous agents discover MM interest quickly.
       const nowSec = Math.floor(Date.now() / 1000);
