@@ -16,6 +16,8 @@ This package is the **autonomous half** of the Thetanuts agent stack: the agent'
 
 Both ultimately call the same SDK encode helpers — the difference is who signs.
 
+> **New here?** [SETUP.md](./SETUP.md) is the end-to-end guide: picking a route, CDP wallet prerequisites, safety limits, and copy-paste configs for Claude Desktop, Claude Code, Cursor, and Codex.
+
 ## Install
 
 ```bash
@@ -80,7 +82,7 @@ const { tools, toolHandler } = await getMcpTools(agentkit); // agentkit holds th
 // wire into @modelcontextprotocol/sdk Server + StdioServerTransport
 ```
 
-Full runnable server: `examples/mcp-server-quickstart.ts`.
+Full runnable server: `examples/mcp-server-quickstart.ts`. Step-by-step client wiring (Claude Desktop, Claude Code, Cursor, Codex) plus CDP wallet setup and safety-limit guidance: [SETUP.md](./SETUP.md).
 
 **This is deliberately a different artifact from [`@thetanuts-finance/mcp`](https://github.com/Thetanuts-Finance/thetanuts-sdk/tree/main/mcp-server).** That server never signs — it builds calldata and the user approves every transaction in Base Account (via Base MCP). This one signs autonomously: there is no per-transaction approval click, so the `SafetyPolicy` caps are the only brake. Run it only with a dedicated, capped wallet. The two servers can be installed side by side — safe default plus explicit autonomous opt-in.
 
