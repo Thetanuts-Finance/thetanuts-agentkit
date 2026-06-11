@@ -31,7 +31,7 @@ Action surface now: 7 write actions (`approve`, `request_rfq`, `make_offer`, `se
 - Update README + both quickstarts to use the new class and field names.
 - No runtime API changes in this package itself.
 
-## 0.1.1 — Phase B audit closeout
+## 0.1.1 — security audit closeout
 
 Five findings from the AgentKit security audit, four addressed here:
 
@@ -57,7 +57,7 @@ Read actions (`get_user_positions`, `get_rfq`, `get_market_prices`) and stateles
 - `SafetyPolicy`, `SafetyLimits`, `SafetyContext`, `SafetyActionType`, `isSafetyError`
 - `safeGetAddress(wallet)` helper for downstream code that wants the same address-validation guarantee.
 
-## 0.1.0 — Phase B initial release
+## 0.1.0 — initial release
 
 First release. Sibling repo to `Thetanuts-Finance/thetanuts-sdk` providing a Coinbase AgentKit ActionProvider for autonomous backend agents.
 
