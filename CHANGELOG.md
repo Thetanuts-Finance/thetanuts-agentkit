@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1 — ship the setup guide and walkthrough skill in the tarball
+
+Docs-only. The 0.2.0 tarball was published minutes before these two files merged, so npm consumers didn't get them even though the README promises `SKILL.md` at `node_modules/@thetanuts-finance/agentkit/SKILL.md`. No code changes.
+
+- Added: `SETUP.md` — end-to-end setup guide: route picker (user-approves vs autonomous), CDP wallet prerequisites and funding, `SafetyPolicy` starter values, and copy-paste MCP configs for Claude Desktop, Claude Code, Cursor, and Codex.
+- Added: `SKILL.md` — walkthrough skill (same pattern as the Base MCP plugin's skill) that teaches any skill-aware agent to guide the user through the kit: tool detection, interactive setup, funding check, first-session safety disclaimer, the 10-tool surface and canonical trade loop, `SafetyPolicy` error explanations, and trust-boundary rules for untrusted trade parameters. Installable via `npx skills add Thetanuts-Finance/thetanuts-agentkit`.
+- Both files added to the package `files` allowlist; README links them.
+
 ## 0.2.0 — drop OptionBook from agent surface
 
 **Breaking** — removes the `fill_order` action.
@@ -13,8 +21,6 @@ OptionBook fills are not exposed in v0.2 because the silent-rejection failure mo
 - Updated: README action table + safety section
 - Added: `SafetyPolicy` unit test suite (`tests/safety.test.mjs`, runs via `node --test` against the compiled `dist/` so it exercises the published artifact) — covers the fail-closed default, notional cap, collateral allowlist, `onWriteAction` hook ordering, and `approvalAmount` policy
 - Added: `examples/mcp-server-quickstart.ts` — run the ActionProvider as an autonomous-signing MCP server via Coinbase's official `@coinbase/agentkit-model-context-protocol` adapter (CDP wallet, `SafetyPolicy` as the only brake). Deliberately a separate artifact from `@thetanuts-finance/mcp`, which never signs.
-- Added: `SETUP.md` — end-to-end setup guide: route picker (user-approves vs autonomous), CDP wallet prerequisites and funding, `SafetyPolicy` starter values, and copy-paste MCP configs for Claude Desktop, Claude Code, Cursor, and Codex. Ships in the npm tarball; README links it.
-- Added: `SKILL.md` — walkthrough skill (same pattern as the Base MCP plugin's skill) that teaches any skill-aware agent to guide the user through the kit: tool detection, interactive setup, funding check, first-session safety disclaimer, the 10-tool surface and canonical trade loop, `SafetyPolicy` error explanations, and trust-boundary rules for untrusted trade parameters. Installable via `npx skills add Thetanuts-Finance/thetanuts-agentkit`; also ships in the npm tarball.
 - Added: GitHub Actions CI — typecheck + test suite on every push and PR. CI builds `thetanuts-client` from source (sibling checkout, same layout as local dev) because the SDK APIs this package uses don't exist in any published SDK version yet.
 - **Breaking (manifest):** `@thetanuts-finance/thetanuts-client` peer floor raised from `>=0.2.5` to `>=0.3.0`. CI's first run caught that `make_offer` / `settle_rfq_early` call `buildOfferTypedData`, `getRequesterPublicKey`, and `getOffer` — none of which exist in the published 0.2.5. This package must not be published to npm before SDK 0.3.0 is.
 - Removed: broken `lint` script (`eslint` was never a dependency).
