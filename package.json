@@ -15,6 +15,7 @@
     "dist",
     "README.md",
     "CHANGELOG.md",
+    "SETUP.md",
     "LICENSE"
   ],
   "scripts": {
