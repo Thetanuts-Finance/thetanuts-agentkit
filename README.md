@@ -12,6 +12,7 @@ This is **Phase B** of the Thetanuts agent integration. Phase A (the Base MCP pl
 | Agent runs unattended on a server with its own wallet (CDP, viem, Privy) | **Phase B: this package** |
 | Maximum reach — works in Claude Desktop, Cursor, ChatGPT, Codex | **Phase A: Base MCP plugin** |
 | Headless trading bot, MM bot, custodied agent vault | **Phase B: this package** |
+| Chat client, but the agent signs by itself with its own wallet | **Phase B as an MCP server** — see [Run as an MCP server](#run-as-an-mcp-server-autonomous-signing) |
 
 Both ultimately call the same SDK encode helpers — the difference is who signs.
 
@@ -69,6 +70,19 @@ const tools = await getLangChainTools(agentkit);
 ```
 
 See `examples/langchain-quickstart.ts` and `examples/vercel-ai-sdk-quickstart.ts` for full runnable demos.
+
+## Run as an MCP server (autonomous signing)
+
+Coinbase ships an official MCP adapter for AgentKit — [`@coinbase/agentkit-model-context-protocol`](https://docs.cdp.coinbase.com/agent-kit/core-concepts/model-context-protocol). Combining it with this package turns the ActionProvider into a stdio MCP server whose tools **sign and broadcast on their own** with the agent's CDP wallet, under the configured `SafetyPolicy`:
+
+```ts
+const { tools, toolHandler } = await getMcpTools(agentkit); // agentkit holds the wallet + thetanutsActionProvider
+// wire into @modelcontextprotocol/sdk Server + StdioServerTransport
+```
+
+Full runnable server: `examples/mcp-server-quickstart.ts`.
+
+**This is deliberately a different artifact from [`@thetanuts-finance/mcp`](https://github.com/Thetanuts-Finance/thetanuts-sdk/tree/main/mcp-server).** That server never signs — it builds calldata and the user approves every transaction in Base Account (via Base MCP). This one signs autonomously: there is no per-transaction approval click, so the `SafetyPolicy` caps are the only brake. Run it only with a dedicated, capped wallet. The two servers can be installed side by side — safe default plus explicit autonomous opt-in.
 
 ## Actions
 

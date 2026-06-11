@@ -12,6 +12,7 @@ OptionBook fills are not exposed in v0.2 because the silent-rejection failure mo
 - Updated: `approve` description no longer mentions OptionBook
 - Updated: README action table + safety section
 - Added: `SafetyPolicy` unit test suite (`tests/safety.test.mjs`, runs via `node --test` against the compiled `dist/` so it exercises the published artifact) — covers the fail-closed default, notional cap, collateral allowlist, `onWriteAction` hook ordering, and `approvalAmount` policy
+- Added: `examples/mcp-server-quickstart.ts` — run the ActionProvider as an autonomous-signing MCP server via Coinbase's official `@coinbase/agentkit-model-context-protocol` adapter (CDP wallet, `SafetyPolicy` as the only brake). Deliberately a separate artifact from `@thetanuts-finance/mcp`, which never signs.
 
 Action surface now: 8 write actions (`approve`, `request_rfq`, `make_offer`, `make_offer_with_signature`, `settle_rfq`, `settle_rfq_early`, `cancel_rfq`, `cancel_offer`) + 3 read actions (`get_user_positions`, `get_rfq`, `get_market_prices`).
 
