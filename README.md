@@ -1,18 +1,18 @@
 # @thetanuts-finance/agentkit
 
-Coinbase AgentKit ActionProvider for trading Thetanuts options on Base. Lets autonomous backend agents — agents that own their own wallet — request quotations (RFQ), make encrypted sealed-bid offers, and settle, through any AgentKit-supported framework (LangChain, Vercel AI SDK, OpenAI Agents SDK, Eliza, MCP, Pydantic AI, AutoGen).
+Coinbase AgentKit ActionProvider for trading Thetanuts options on Base. Lets autonomous backend agents — agents that own their own wallet — request quotations (RFQ), make encrypted sealed-bid offers, and settle, through AgentKit's TypeScript framework adapters: LangChain, Vercel AI SDK, or any MCP client via Coinbase's MCP adapter.
 
-This is **Phase B** of the Thetanuts agent integration. Phase A (the Base MCP plugin + prepare service, for user-in-the-loop agents) lives in the main SDK repo at `Thetanuts-Finance/thetanuts-sdk/mcp-server/plugins/base-mcp`.
+This package is the **autonomous half** of the Thetanuts agent stack: the agent's own wallet signs, unattended, under code-level safety limits. The **user-in-the-loop half** — where the user approves every transaction in Base Account — is the Base MCP plugin in the main SDK repo at `Thetanuts-Finance/thetanuts-sdk/mcp-server/plugins/base-mcp`.
 
 ## When to use this vs Base MCP plugin
 
 | Need | Use |
 |---|---|
-| User signs every transaction in Base Account, agent prepares calldata | **Phase A: Base MCP plugin** |
-| Agent runs unattended on a server with its own wallet (CDP, viem, Privy) | **Phase B: this package** |
-| Maximum reach — works in Claude Desktop, Cursor, ChatGPT, Codex | **Phase A: Base MCP plugin** |
-| Headless trading bot, MM bot, custodied agent vault | **Phase B: this package** |
-| Chat client, but the agent signs by itself with its own wallet | **Phase B as an MCP server** — see [Run as an MCP server](#run-as-an-mcp-server-autonomous-signing) |
+| User signs every transaction in Base Account, agent prepares calldata | **Base MCP plugin** (SDK repo) |
+| Agent runs unattended on a server with its own wallet (CDP, viem, Privy) | **This package** |
+| Maximum reach — works in Claude Desktop, Cursor, ChatGPT, Codex | **Base MCP plugin** (SDK repo) |
+| Headless trading bot, MM bot, custodied agent vault | **This package** |
+| Chat client, but the agent signs by itself with its own wallet | **This package as an MCP server** — see [Run as an MCP server](#run-as-an-mcp-server-autonomous-signing) |
 
 Both ultimately call the same SDK encode helpers — the difference is who signs.
 
@@ -168,21 +168,22 @@ The `get_rfq` action sanitizes its response to omit encrypted offer ciphertexts 
 - **No prompt-injection defense at the protocol layer.** If your agent reads from untrusted sources (web pages, third-party messages), they may contain values for `quotationId` / `offerorAddress` / `strikes` chosen by an adversary. Validate provenance before calling write actions. The safety policy bounds the damage; it doesn't prevent the attempt.
 - **Custom wallet providers are trusted.** A malicious `EvmWalletProvider` subclass can still sign with a different key than its `getAddress()` reports. The `safeGetAddress` helper checksum-validates the address but cannot verify the wallet actually signs with the key behind it. Pin wallet provider versions and review what you depend on.
 
-## Out of scope (v1)
+## Out of scope
 
+- OptionBook fills (`fill_order` was removed in 0.2.0 — RFQ is the only write path; use the SDK's `optionBook.encodeFillOrder` directly if you need it).
 - `swap_and_fill`, `swap_and_call` — depend on a third-party swap-quote integration (KyberSwap or 0x).
 - Vault deposit/withdraw (`strategyVault`, `wheelVault`).
 - Loan flows.
 - Ethereum mainnet (chainId 1).
 
-These will land in v0.2.x.
+These may land in a future release.
 
 ## Development
 
 ```bash
 npm install
 npm run typecheck
-npm run build
+npm test          # builds, then runs the SafetyPolicy suite against dist/
 ```
 
 The `@thetanuts-finance/thetanuts-client` dependency is wired to a local `file:../thetanuts-sdk` path in development; publishing scripts swap it to the npm-published version.

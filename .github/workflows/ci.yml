@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Typecheck + tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # The thetanuts-client devDependency is wired to file:../thetanuts-sdk
+      # for local development; that path doesn't exist in CI. Swap it to the
+      # published npm version, then install without the lockfile (the
+      # lockfile pins the file: path).
+      - name: Point thetanuts-client at npm
+        run: |
+          node -e "
+            const fs = require('fs');
+            const p = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            const range = p.peerDependencies['@thetanuts-finance/thetanuts-client'];
+            p.devDependencies['@thetanuts-finance/thetanuts-client'] = range;
+            fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');
+            console.log('thetanuts-client →', range);
+          "
+
+      - name: Install
+        run: npm install --no-package-lock
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
