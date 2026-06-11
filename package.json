@@ -20,7 +20,6 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src",
     "test": "npm run build && node --test tests/*.test.mjs",
     "prepublishOnly": "npm run typecheck && npm run build"
   },
@@ -50,7 +49,7 @@
   },
   "peerDependencies": {
     "@coinbase/agentkit": ">=0.10.0",
-    "@thetanuts-finance/thetanuts-client": ">=0.2.5",
+    "@thetanuts-finance/thetanuts-client": ">=0.3.0",
     "reflect-metadata": ">=0.2.0"
   },
   "dependencies": {

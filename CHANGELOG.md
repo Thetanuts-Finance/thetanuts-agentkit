@@ -13,8 +13,12 @@ OptionBook fills are not exposed in v0.2 because the silent-rejection failure mo
 - Updated: README action table + safety section
 - Added: `SafetyPolicy` unit test suite (`tests/safety.test.mjs`, runs via `node --test` against the compiled `dist/` so it exercises the published artifact) — covers the fail-closed default, notional cap, collateral allowlist, `onWriteAction` hook ordering, and `approvalAmount` policy
 - Added: `examples/mcp-server-quickstart.ts` — run the ActionProvider as an autonomous-signing MCP server via Coinbase's official `@coinbase/agentkit-model-context-protocol` adapter (CDP wallet, `SafetyPolicy` as the only brake). Deliberately a separate artifact from `@thetanuts-finance/mcp`, which never signs.
+- Added: GitHub Actions CI — typecheck + test suite on every push and PR. CI builds `thetanuts-client` from source (sibling checkout, same layout as local dev) because the SDK APIs this package uses don't exist in any published SDK version yet.
+- **Breaking (manifest):** `@thetanuts-finance/thetanuts-client` peer floor raised from `>=0.2.5` to `>=0.3.0`. CI's first run caught that `make_offer` / `settle_rfq_early` call `buildOfferTypedData`, `getRequesterPublicKey`, and `getOffer` — none of which exist in the published 0.2.5. This package must not be published to npm before SDK 0.3.0 is.
+- Removed: broken `lint` script (`eslint` was never a dependency).
+- Docs: README no longer uses internal "Phase A / Phase B" naming — replaced with plain language (user-in-the-loop Base MCP plugin vs this autonomous package); framework list corrected to the adapters that actually exist for TypeScript (LangChain, Vercel AI SDK, MCP); fixed the action-surface count (7 write actions — `make_offer_with_signature` never existed).
 
-Action surface now: 8 write actions (`approve`, `request_rfq`, `make_offer`, `make_offer_with_signature`, `settle_rfq`, `settle_rfq_early`, `cancel_rfq`, `cancel_offer`) + 3 read actions (`get_user_positions`, `get_rfq`, `get_market_prices`).
+Action surface now: 7 write actions (`approve`, `request_rfq`, `make_offer`, `settle_rfq`, `settle_rfq_early`, `cancel_rfq`, `cancel_offer`) + 3 read actions (`get_user_positions`, `get_rfq`, `get_market_prices`).
 
 ## 0.1.4 — 30-second default RFQ offer window
 

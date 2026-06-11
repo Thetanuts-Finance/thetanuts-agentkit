@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Typecheck + tests
+    runs-on: ubuntu-latest
+    steps:
+      # This package's make_offer / settle_rfq_early use SDK APIs
+      # (buildOfferTypedData, getRequesterPublicKey, getOffer) that first
+      # ship in thetanuts-client 0.3.0. Until that version is on npm, CI
+      # mirrors the local dev layout: check out the SDK as a sibling and
+      # build it, so the file:../thetanuts-sdk devDependency resolves.
+      - name: Checkout agentkit
+        uses: actions/checkout@v4
+        with:
+          path: agentkit
+
+      - name: Checkout thetanuts-sdk
+        uses: actions/checkout@v4
+        with:
+          repository: Thetanuts-Finance/thetanuts-sdk
+          path: thetanuts-sdk
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build SDK
+        working-directory: thetanuts-sdk
+        run: npm ci && npm run build
+
+      - name: Install
+        working-directory: agentkit
+        run: npm install
+
+      - name: Typecheck
+        working-directory: agentkit
+        run: npm run typecheck
+
+      - name: Test
+        working-directory: agentkit
+        run: npm test
