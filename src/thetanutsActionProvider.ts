@@ -5,6 +5,7 @@ import {
   type EvmWalletProvider,
   type Network,
 } from '@coinbase/agentkit';
+import { encodeFunctionData } from 'viem';
 import {
   ApproveSchema,
   RequestRfqSchema,
@@ -13,6 +14,7 @@ import {
   SettleRfqEarlySchema,
   CancelRfqSchema,
   CancelOfferSchema,
+  TransferPositionSchema,
   GetUserPositionsSchema,
   GetRfqSchema,
   GetMarketPricesSchema,
@@ -21,6 +23,25 @@ import { buildClient, BASE_CHAIN_ID, safeGetAddress } from './sdk.js';
 import { SafetyPolicy, isSafetyError, type SafetyLimits } from './safety.js';
 
 const MAX_UINT256 = (1n << 256n) - 1n;
+
+/**
+ * Minimal ABI for the one BaseOption method we encode here:
+ * `transfer(bool isBuyer, address target)`. The SDK exposes this only via a
+ * signer-backed Contract; the agentkit holds no signer in the SDK client, so
+ * we encode the calldata directly and broadcast through the wallet provider.
+ */
+const BASE_OPTION_TRANSFER_ABI = [
+  {
+    type: 'function',
+    name: 'transfer',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'isBuyer', type: 'bool' },
+      { name: 'target', type: 'address' },
+    ],
+    outputs: [],
+  },
+] as const;
 
 /**
  * AgentKit ActionProvider exposing the Thetanuts options surface to
@@ -335,6 +356,49 @@ export class ThetanutsActionProvider extends ActionProvider<EvmWalletProvider> {
   }
 
   // ====================================================================
+  // Position transfer
+  // ====================================================================
+
+  @CreateAction({
+    name: 'transfer_position',
+    description:
+      'Transfer a settled option position (one leg) to another address. Use this to hand a freshly-settled position to a counterparty or end user. Get the optionAddress from get_user_positions. isBuyer selects which leg: true = long/buyer, false = short/seller. This moves value and is gated by SafetyPolicy — the recipient is passed to the onWriteAction hook so the host can allowlist it.',
+    schema: TransferPositionSchema,
+  })
+  async transferPosition(
+    wallet: EvmWalletProvider,
+    args: z.infer<typeof TransferPositionSchema>,
+  ): Promise<string> {
+    return this.withSafety(async () => {
+      // A position transfer has no ERC20 amount; the notional cap is N/A.
+      // We surface the recipient as `spender` so onWriteAction can allowlist
+      // the target, and the BaseOption address as `token` for logging.
+      this.safety.assertAllowed({
+        action: 'transferPosition',
+        token: args.optionAddress as `0x${string}`,
+        spender: args.target as `0x${string}`,
+        amount: 0n,
+        isApproval: false,
+      });
+
+      // Encode BaseOption.transfer(bool isBuyer, address target). The SDK has
+      // no encode-only helper for this, so we encode directly and broadcast
+      // via the wallet provider (the SDK client holds no signer here).
+      const data = encodeFunctionData({
+        abi: BASE_OPTION_TRANSFER_ABI,
+        functionName: 'transfer',
+        args: [args.isBuyer, args.target as `0x${string}`],
+      });
+      const hash = (await wallet.sendTransaction({
+        to: args.optionAddress as `0x${string}`,
+        data,
+      })) as `0x${string}`;
+      await wallet.waitForTransactionReceipt(hash);
+      return `Transferred ${args.isBuyer ? 'buyer' : 'seller'} position ${args.optionAddress} to ${args.target}. tx=${hash}`;
+    }) as Promise<string>;
+  }
+
+  // ====================================================================
   // Read-only helpers
   // ====================================================================
 
@@ -355,6 +419,7 @@ export class ThetanutsActionProvider extends ActionProvider<EvmWalletProvider> {
     return JSON.stringify(
       positions.map((p) => ({
         id: p.id,
+        optionAddress: p.optionAddress,
         side: p.side,
         amount: p.amount.toString(),
         entryPrice: p.entryPrice.toString(),

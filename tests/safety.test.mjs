@@ -181,3 +181,64 @@ describe('isSafetyError', () => {
     }
   });
 });
+
+describe('transferPosition action', () => {
+  const transferCtx = (overrides = {}) =>
+    ctx({
+      action: 'transferPosition',
+      token: '0x1111111111111111111111111111111111111111', // BaseOption addr
+      spender: '0x2222222222222222222222222222222222222222', // recipient
+      amount: 0n,
+      isApproval: false,
+      ...overrides,
+    });
+
+  test('fail-closed: no limits → SAFETY_LIMITS_REQUIRED', () => {
+    const policy = new SafetyPolicy(undefined);
+    assert.throws(
+      () => policy.assertAllowed(transferCtx()),
+      (err) => isSafetyError(err) && err.code === 'SAFETY_LIMITS_REQUIRED',
+    );
+  });
+
+  test('zero-amount transfer passes the notional cap', () => {
+    const policy = new SafetyPolicy({ maxNotionalUsdcPerAction: 50_000_000n });
+    assert.doesNotThrow(() => policy.assertAllowed(transferCtx()));
+  });
+
+  test('collateral allowlist is not applied to transfers (no symbol passed)', () => {
+    const policy = new SafetyPolicy({
+      maxNotionalUsdcPerAction: 50_000_000n,
+      allowedCollateral: ['USDC'],
+    });
+    assert.doesNotThrow(() => policy.assertAllowed(transferCtx()));
+  });
+
+  test('onWriteAction hook receives the recipient as spender and can reject', () => {
+    let seen;
+    const policy = new SafetyPolicy({
+      maxNotionalUsdcPerAction: 50_000_000n,
+      onWriteAction: (c) => {
+        seen = c;
+        return c.spender === '0x2222222222222222222222222222222222222222'
+          ? 'reject'
+          : 'allow';
+      },
+    });
+    assert.throws(
+      () => policy.assertAllowed(transferCtx()),
+      (err) => isSafetyError(err) && err.code === 'SAFETY_REJECTED_BY_HOST',
+    );
+    assert.equal(seen.action, 'transferPosition');
+    assert.equal(seen.amount, 0n);
+  });
+
+  test('onWriteAction allowlist: matching target is allowed', () => {
+    const ALLOWED = '0x3333333333333333333333333333333333333333';
+    const policy = new SafetyPolicy({
+      maxNotionalUsdcPerAction: 50_000_000n,
+      onWriteAction: (c) => (c.spender === ALLOWED ? 'allow' : 'reject'),
+    });
+    assert.doesNotThrow(() => policy.assertAllowed(transferCtx({ spender: ALLOWED })));
+  });
+});

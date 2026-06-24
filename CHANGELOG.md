@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.2 — add `transfer_position` action
+
+Adds an 11th action so an agent can hand a settled option position to another address. This unblocks flows where the agent settles an RFQ on its own wallet (the signer owns the minted position) and must then transfer it to an end user or counterparty — e.g. an ACP provider fulfilling a job.
+
+- Added: `transfer_position` action — encodes `BaseOption.transfer(bool isBuyer, address target)` and broadcasts via the wallet provider. `isBuyer` selects the long/short leg; `optionAddress` is resolved from `get_user_positions`.
+- Added: `TransferPositionSchema` / `TransferPositionArgs`, exported from the package entry.
+- Changed: `get_user_positions` output now includes `optionAddress` (needed to address a transfer).
+- Safety: the action is gated by `SafetyPolicy` as a new `transferPosition` action type. It carries no ERC20 amount (notional cap N/A, `amount: 0n`) and skips the collateral allowlist; the recipient is passed to `onWriteAction` as `spender` so hosts can allowlist the target. New tests in `tests/safety.test.mjs`.
+
 ## 0.2.1 — ship the setup guide and walkthrough skill in the tarball
 
 Docs-only. The 0.2.0 tarball was published minutes before these two files merged, so npm consumers didn't get them even though the README promises `SKILL.md` at `node_modules/@thetanuts-finance/agentkit/SKILL.md`. No code changes.

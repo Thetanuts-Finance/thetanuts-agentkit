@@ -16,6 +16,7 @@ export {
   SettleRfqEarlySchema,
   CancelRfqSchema,
   CancelOfferSchema,
+  TransferPositionSchema,
   GetUserPositionsSchema,
   GetRfqSchema,
   ProductEnum,
@@ -31,6 +32,7 @@ export type {
   SettleRfqEarlyArgs,
   CancelRfqArgs,
   CancelOfferArgs,
+  TransferPositionArgs,
   GetUserPositionsArgs,
   GetRfqArgs,
 } from './schemas.js';
