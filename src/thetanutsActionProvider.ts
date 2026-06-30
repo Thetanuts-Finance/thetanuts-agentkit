@@ -2,7 +2,12 @@ import type { z } from 'zod';
 import {
   ActionProvider,
   CreateAction,
-  type EvmWalletProvider,
+  // EvmWalletProvider MUST be a VALUE import (not `type`): action methods are
+  // annotated `wallet: EvmWalletProvider`, and emitDecoratorMetadata only records
+  // the real class (so AgentKit injects the wallet as arg[0]) when the type is a
+  // runtime value. As a type-only import the metadata degrades to `Function` and
+  // the wallet is never injected → "wallet.getNetwork is not a function".
+  EvmWalletProvider,
   type Network,
 } from '@coinbase/agentkit';
 import { encodeFunctionData } from 'viem';
