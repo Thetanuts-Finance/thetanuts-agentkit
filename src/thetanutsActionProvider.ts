@@ -478,7 +478,9 @@ export class ThetanutsActionProvider extends ActionProvider<EvmWalletProvider> {
   async getMarketPrices(wallet: EvmWalletProvider, _args: unknown): Promise<string> {
     const client = buildClient(wallet, this.rpcUrl);
     const prices = await client.api.getMarketPrices();
-    return JSON.stringify(prices, null, 2);
+    // The API response can contain BigInt fields, which JSON.stringify can't
+    // serialize by default — coerce them to strings.
+    return JSON.stringify(prices, (_k, v) => (typeof v === 'bigint' ? v.toString() : v), 2);
   }
 }
 
