@@ -60,7 +60,7 @@
   },
   "devDependencies": {
     "@coinbase/agentkit": "^0.10.0",
-    "@thetanuts-finance/thetanuts-client": "file:../thetanuts-sdk",
+    "@thetanuts-finance/thetanuts-client": "^0.3.0",
     "@types/node": "^20.0.0",
     "reflect-metadata": "^0.2.0",
     "typescript": "^5.4.0"
