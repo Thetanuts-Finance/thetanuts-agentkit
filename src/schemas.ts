@@ -65,6 +65,12 @@ export const CancelOfferSchema = z.object({
   quotationId: INT_STRING.describe('Quotation ID whose offer the agent wants to retract.'),
 });
 
+export const TransferPositionSchema = z.object({
+  optionAddress: ADDRESS.describe('BaseOption contract address of the settled position to transfer. Look it up via get_user_positions after settling.'),
+  isBuyer: z.boolean().describe('Which leg to transfer: true = the buyer (long) position, false = the seller (short/written) position.'),
+  target: ADDRESS.describe('Recipient address that will own the position after transfer.'),
+});
+
 // ---------- Read helpers ----------
 
 export const GetUserPositionsSchema = z.object({
@@ -86,6 +92,7 @@ export type SettleRfqArgs = z.infer<typeof SettleRfqSchema>;
 export type SettleRfqEarlyArgs = z.infer<typeof SettleRfqEarlySchema>;
 export type CancelRfqArgs = z.infer<typeof CancelRfqSchema>;
 export type CancelOfferArgs = z.infer<typeof CancelOfferSchema>;
+export type TransferPositionArgs = z.infer<typeof TransferPositionSchema>;
 export type GetUserPositionsArgs = z.infer<typeof GetUserPositionsSchema>;
 export type GetRfqArgs = z.infer<typeof GetRfqSchema>;
 
