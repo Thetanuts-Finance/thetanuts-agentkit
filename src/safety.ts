@@ -24,6 +24,7 @@ const SAFE_TYPES = {
   approve: 'approve' as const,
   requestRfq: 'requestRfq' as const,
   makeOffer: 'makeOffer' as const,
+  transferPosition: 'transferPosition' as const,
 };
 
 export type SafetyActionType = (typeof SAFE_TYPES)[keyof typeof SAFE_TYPES];
@@ -31,11 +32,19 @@ export type SafetyActionType = (typeof SAFE_TYPES)[keyof typeof SAFE_TYPES];
 export interface SafetyContext {
   /** Action kind being attempted. */
   action: SafetyActionType;
-  /** Token contract being moved (e.g. the collateral or quote token). */
+  /**
+   * Token contract being moved (e.g. the collateral or quote token). For a
+   * `transferPosition` action this is the BaseOption contract address being
+   * transferred (not an ERC20), and `amount` is 0n.
+   */
   token: `0x${string}`;
-  /** Spender being granted allowance, or the target of the spend. */
+  /**
+   * Spender being granted allowance, or the target of the spend. For a
+   * `transferPosition` action this is the recipient that will own the
+   * position — host hooks should allowlist it here.
+   */
   spender: `0x${string}`;
-  /** Amount in token base units (e.g. 1_000_000n = 1 USDC for 6-dec). */
+  /** Amount in token base units (e.g. 1_000_000n = 1 USDC for 6-dec). 0n for transfers. */
   amount: bigint;
   /** Whether this action requests an ERC20 approval. */
   isApproval: boolean;

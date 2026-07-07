@@ -1,6 +1,6 @@
 {
   "name": "@thetanuts-finance/agentkit",
-  "version": "0.2.1",
+  "version": "0.2.5",
   "description": "Coinbase AgentKit ActionProvider for trading Thetanuts options on Base — for autonomous backend agents that own their own wallet (CDP, viem, Privy, server wallets).",
   "type": "module",
   "main": "./dist/index.js",
@@ -60,7 +60,7 @@
   },
   "devDependencies": {
     "@coinbase/agentkit": "^0.10.0",
-    "@thetanuts-finance/thetanuts-client": "file:../thetanuts-sdk",
+    "@thetanuts-finance/thetanuts-client": "^0.3.0",
     "@types/node": "^20.0.0",
     "reflect-metadata": "^0.2.0",
     "typescript": "^5.4.0"

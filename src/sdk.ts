@@ -33,9 +33,20 @@ export function buildClient(wallet: EvmWalletProvider, rpcUrl?: string): Thetanu
   // negligible compared to LLM round-trips.
   const provider = new JsonRpcProvider(rpcUrl ?? 'https://mainnet.base.org');
 
+  // Optional referrer for RFQ fee sharing. When THETANUTS_REFERRER is a valid
+  // address, the SDK attributes RFQ referral to it so accrued fees can be
+  // claimed to that wallet (see claimFees / getFactoryReferrerStats). Inert
+  // until Thetanuts enables a non-zero fee split for the address — harmless
+  // when unset (behaves exactly as before). Never throws on a bad value: an
+  // invalid referrer must not break trade execution, so we just skip it.
+  const referrerRaw = process.env.THETANUTS_REFERRER?.trim();
+  const referrer =
+    referrerRaw && /^0x[0-9a-fA-F]{40}$/.test(referrerRaw) ? referrerRaw : undefined;
+
   return new ThetanutsClient({
     chainId: BASE_CHAIN_ID,
     provider,
+    ...(referrer ? { referrer } : {}),
     // No signer. Writes go through wallet.sendTransaction(); the SDK only
     // builds calldata.
   });

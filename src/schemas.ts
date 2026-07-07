@@ -65,6 +65,12 @@ export const CancelOfferSchema = z.object({
   quotationId: INT_STRING.describe('Quotation ID whose offer the agent wants to retract.'),
 });
 
+export const TransferPositionSchema = z.object({
+  optionAddress: ADDRESS.describe('BaseOption contract address of the settled position to transfer. Look it up via get_user_positions after settling.'),
+  isBuyer: z.boolean().describe('Which leg to transfer: true = the buyer (long) position, false = the seller (short/written) position.'),
+  target: ADDRESS.describe('Recipient address that will own the position after transfer.'),
+});
+
 // ---------- Read helpers ----------
 
 export const GetUserPositionsSchema = z.object({
@@ -77,6 +83,21 @@ export const GetRfqSchema = z.object({
 
 export const GetMarketPricesSchema = z.object({});
 
+// Quote the MM's EXPECTED price for a specific structure BEFORE creating the RFQ.
+// Returns the price the market-maker will actually quote (non-whitelisted), which
+// runs higher than the public pricing feed — use it to size a reserve that clears.
+export const GetMmQuoteSchema = z.object({
+  product: ProductEnum.describe('Option structure (PUT, CALL, PUT_SPREAD, etc.).'),
+  underlying: UnderlyingEnum.describe('Underlying asset.'),
+  strikes: z
+    .array(DECIMAL_STRING)
+    .min(1)
+    .max(4)
+    .describe('Strike price(s) in human-readable decimal, matching the product.'),
+  expiry: z.number().int().positive().describe('Option expiry as a Unix timestamp (seconds).'),
+  numContracts: DECIMAL_STRING.optional().describe('Number of contracts (default 1).'),
+});
+
 // ---------- Internal types ----------
 
 export type ApproveArgs = z.infer<typeof ApproveSchema>;
@@ -86,6 +107,7 @@ export type SettleRfqArgs = z.infer<typeof SettleRfqSchema>;
 export type SettleRfqEarlyArgs = z.infer<typeof SettleRfqEarlySchema>;
 export type CancelRfqArgs = z.infer<typeof CancelRfqSchema>;
 export type CancelOfferArgs = z.infer<typeof CancelOfferSchema>;
+export type TransferPositionArgs = z.infer<typeof TransferPositionSchema>;
 export type GetUserPositionsArgs = z.infer<typeof GetUserPositionsSchema>;
 export type GetRfqArgs = z.infer<typeof GetRfqSchema>;
 
