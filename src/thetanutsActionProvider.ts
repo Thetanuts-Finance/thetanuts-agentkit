@@ -23,6 +23,7 @@ import {
   GetUserPositionsSchema,
   GetRfqSchema,
   GetMarketPricesSchema,
+  GetMmQuoteSchema,
 } from './schemas.js';
 import { buildClient, BASE_CHAIN_ID, safeGetAddress } from './sdk.js';
 import { SafetyPolicy, isSafetyError, type SafetyLimits } from './safety.js';
@@ -481,6 +482,31 @@ export class ThetanutsActionProvider extends ActionProvider<EvmWalletProvider> {
     // The API response can contain BigInt fields, which JSON.stringify can't
     // serialize by default — coerce them to strings.
     return JSON.stringify(prices, (_k, v) => (typeof v === 'bigint' ? v.toString() : v), 2);
+  }
+
+  @CreateAction({
+    name: 'get_mm_quote',
+    description:
+      "Quote the market-maker's EXPECTED price for a specific structure BEFORE creating an RFQ. " +
+      'Returns the price the MM will actually quote (non-whitelisted, higher than the public pricing feed) ' +
+      'and a recommended reserve price, so a BUY reserve can be sized to actually clear. ' +
+      'Supports single-leg (PUT/CALL) and 2-strike spreads (PUT_SPREAD/CALL_SPREAD).',
+    schema: GetMmQuoteSchema,
+  })
+  async getMmQuote(
+    wallet: EvmWalletProvider,
+    args: z.infer<typeof GetMmQuoteSchema>,
+  ): Promise<string> {
+    const client = buildClient(wallet, this.rpcUrl);
+    const { getMmQuoteForStructure } = await import('./mmQuote.js');
+    const quote = await getMmQuoteForStructure(client, {
+      product: args.product,
+      underlying: args.underlying,
+      strikes: args.strikes.map(parseFloat),
+      expiry: args.expiry,
+      numContracts: args.numContracts ? parseFloat(args.numContracts) : 1,
+    });
+    return JSON.stringify(quote, (_k, v) => (typeof v === 'bigint' ? v.toString() : v), 2);
   }
 }
 

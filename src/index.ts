@@ -41,3 +41,5 @@ export { BASE_CHAIN_ID, safeGetAddress, buildClient } from './sdk.js';
 
 export { SafetyPolicy, isSafetyError } from './safety.js';
 export type { SafetyLimits, SafetyContext, SafetyActionType } from './safety.js';
+export { getMmQuoteForStructure } from './mmQuote.js';
+export type { MmQuote, MmQuoteParams } from './mmQuote.js';

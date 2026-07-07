@@ -83,6 +83,21 @@ export const GetRfqSchema = z.object({
 
 export const GetMarketPricesSchema = z.object({});
 
+// Quote the MM's EXPECTED price for a specific structure BEFORE creating the RFQ.
+// Returns the price the market-maker will actually quote (non-whitelisted), which
+// runs higher than the public pricing feed — use it to size a reserve that clears.
+export const GetMmQuoteSchema = z.object({
+  product: ProductEnum.describe('Option structure (PUT, CALL, PUT_SPREAD, etc.).'),
+  underlying: UnderlyingEnum.describe('Underlying asset.'),
+  strikes: z
+    .array(DECIMAL_STRING)
+    .min(1)
+    .max(4)
+    .describe('Strike price(s) in human-readable decimal, matching the product.'),
+  expiry: z.number().int().positive().describe('Option expiry as a Unix timestamp (seconds).'),
+  numContracts: DECIMAL_STRING.optional().describe('Number of contracts (default 1).'),
+});
+
 // ---------- Internal types ----------
 
 export type ApproveArgs = z.infer<typeof ApproveSchema>;

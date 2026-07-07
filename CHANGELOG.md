@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.4 — BigInt-safe market prices, optional RFQ referrer, registry-based SDK dep
+
+- Fixed: `get_market_prices` serialization is BigInt-safe (no `TypeError: Do not know how to serialize a BigInt`).
+- Added: optional `referrer` on the client (via `THETANUTS_REFERRER`) so RFQ referral fees can accrue to a wallet; `buildClient` is now exported from the package entry so consumers can read/claim those fees.
+- Fixed: depend on the published `@thetanuts-finance/thetanuts-client@^0.3.0` instead of a `file:` link to a local SDK checkout, so the package builds in any clean environment (CI, fresh clone, Docker).
+
+## 0.2.3 — value-import `EvmWalletProvider` so AgentKit injects the wallet
+
+- Fixed: `EvmWalletProvider` was imported as a type only, which degraded the decorator's `design:paramtypes` metadata to `Function` and stopped AgentKit from injecting the wallet at runtime (`wallet.getNetwork is not a function`). Now imported as a value.
+
 ## 0.2.2 — add `transfer_position` action
 
 Adds an 11th action so an agent can hand a settled option position to another address. This unblocks flows where the agent settles an RFQ on its own wallet (the signer owns the minted position) and must then transfer it to an end user or counterparty — e.g. an ACP provider fulfilling a job.
